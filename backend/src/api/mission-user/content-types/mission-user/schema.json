@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "mission_users",
+  "info": {
+    "singularName": "mission-user",
+    "pluralName": "mission-users",
+    "displayName": "MissionUser",
+    "description": "Link between mission and user assignment"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "mission": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::mission.mission"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["assigned", "in_progress", "completed"],
+      "default": "assigned",
+      "required": true
+    }
+  }
+}
