@@ -6,7 +6,7 @@ export default {
       path: '/missions/:id/assign',
       handler: 'api::mission.custom-mission.assignUser',
       config: {
-        policies: [],
+        policies: ['api::mission.is-admin-or-manager'],
       },
     },
     {
@@ -22,7 +22,7 @@ export default {
       path: '/missions/:id/participants/:userId',
       handler: 'api::mission.custom-mission.removeParticipant',
       config: {
-        policies: [],
+        policies: ['api::mission.is-admin-or-manager'],
       },
     },
     {
@@ -30,7 +30,7 @@ export default {
       path: '/missions/:id/assign-organization',
       handler: 'api::mission.custom-mission.assignOrganization',
       config: {
-        policies: [],
+        policies: ['api::mission.is-admin-or-manager'],
       },
     },
   ],

@@ -20,6 +20,7 @@ import { useUsers } from '@/lib/queries/useUsers';
 import { useOrganizations } from '@/lib/queries/useOrganizations';
 import { useAssignUserToMission, useAssignOrgToMission } from '@/lib/queries/useMissions';
 import type { StrapiUser, MissionUser, Organization } from '@/types';
+import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
 type Tab = 'user' | 'organization';
@@ -52,8 +53,7 @@ export default function AssignUserDialog({ missionDocumentId, existingParticipan
       setSelectedUserId('');
       setOpen(false);
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-      toast.error(axiosErr.response?.data?.error?.message || 'Failed to assign user');
+      toast.error(getErrorMessage(err, 'Failed to assign user'));
     }
   };
 
@@ -65,8 +65,7 @@ export default function AssignUserDialog({ missionDocumentId, existingParticipan
       setSelectedOrgId('');
       setOpen(false);
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-      toast.error(axiosErr.response?.data?.error?.message || 'Failed to assign organization');
+      toast.error(getErrorMessage(err, 'Failed to assign organization'));
     }
   };
 

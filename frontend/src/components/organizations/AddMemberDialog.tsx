@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { useUsers } from '@/lib/queries/useUsers';
 import { useAddOrgMember } from '@/lib/queries/useOrganizations';
 import type { StrapiUser } from '@/types';
+import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
 interface AddMemberDialogProps {
@@ -44,8 +45,7 @@ export default function AddMemberDialog({ orgDocumentId, existingMemberIds }: Ad
       setSelectedUserId('');
       setOpen(false);
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-      toast.error(axiosErr.response?.data?.error?.message || 'Failed to add member');
+      toast.error(getErrorMessage(err, 'Failed to add member'));
     }
   };
 

@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AddMemberDialog from '@/components/organizations/AddMemberDialog';
+import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
 export default function OrganizationDetailPage() {
@@ -48,8 +49,8 @@ export default function OrganizationDetailPage() {
     try {
       await removeMember.mutateAsync(userId);
       toast.success('Member removed');
-    } catch {
-      toast.error('Failed to remove member');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to remove member'));
     }
   };
 
@@ -60,8 +61,8 @@ export default function OrganizationDetailPage() {
       toast.success('Manager updated');
       setEditingManager(false);
       setSelectedManagerId('');
-    } catch {
-      toast.error('Failed to update manager');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to update manager'));
     }
   };
 

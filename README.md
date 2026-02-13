@@ -32,3 +32,20 @@ npm run dev
 ```
 
 Frontend runs at http://localhost:3000
+
+### 3. Run with Docker Compose
+
+From the project root:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+# Edit backend/.env and set APP_KEYS, JWT_SECRET, etc.
+
+docker compose up --build
+```
+
+- Backend: http://localhost:1337 (admin: http://localhost:1337/admin)
+- Frontend: http://localhost:3000
+
+Set `NEXT_PUBLIC_API_URL=http://localhost:1337` in `frontend/.env.local` or when building so the browser can reach the API. For Docker, the default in `docker-compose.yml` is already `http://localhost:1337`.

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
-import { useMissions, useMyMissionAssignments } from '@/lib/queries/useMissions';
+import { useMissions } from '@/lib/queries/useMissions';
 import { useCurrentUser } from '@/lib/queries/useUsers';
 import { isAdmin, isManager, getStoredUser } from '@/lib/auth';
 import {
@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import CreateMissionDialog from '@/components/missions/CreateMissionDialog';
-import type { Mission } from '@/types';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-800',
@@ -27,23 +26,7 @@ export default function MissionsPage() {
   const { data: currentUser } = useCurrentUser();
   const effectiveUser = currentUser || getStoredUser();
   const canManage = isAdmin(effectiveUser) || isManager(effectiveUser);
-
-  const { data: allMissions, isLoading: loadingAll, error: errorAll } = useMissions();
-  const { data: myAssignments, isLoading: loadingMy, error: errorMy } = useMyMissionAssignments(
-    canManage ? undefined : effectiveUser?.id
-  );
-
-  const isLoading = canManage ? loadingAll : loadingMy;
-  const error = canManage ? errorAll : errorMy;
-
-  let missions: Mission[] = [];
-  if (canManage) {
-    missions = allMissions || [];
-  } else if (myAssignments) {
-    missions = myAssignments
-      .filter((mu) => mu.mission)
-      .map((mu) => mu.mission);
-  }
+  const { data: missions = [], isLoading, error } = useMissions();
 
   return (
     <AppLayout allowedRoles={['Admin', 'Manager', 'Authenticated']}>

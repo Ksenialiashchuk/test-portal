@@ -22,6 +22,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateMission } from '@/lib/queries/useMissions';
+import { useCurrentUser } from '@/lib/queries/useUsers';
+import api from '@/lib/api';
+import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
 const schema = yup.object({
@@ -35,6 +38,7 @@ export default function CreateMissionDialog() {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState('draft');
   const createMission = useCreateMission();
+  const { data: currentUser } = useCurrentUser();
   const {
     register,
     handleSubmit,
@@ -46,14 +50,22 @@ export default function CreateMissionDialog() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await createMission.mutateAsync({ ...data, status });
+      const mission = await createMission.mutateAsync({ ...data, status });
+      if (currentUser?.id && mission?.documentId) {
+        try {
+          await api.post(`/api/missions/${mission.documentId}/assign`, {
+            userId: currentUser.id,
+          });
+        } catch {
+          // mission created but self-assign failed; user can add themselves later
+        }
+      }
       toast.success('Mission created');
       reset();
       setStatus('draft');
       setOpen(false);
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-      toast.error(axiosErr.response?.data?.error?.message || 'Failed to create mission');
+      toast.error(getErrorMessage(err, 'Failed to create mission'));
     }
   };
 

@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import AssignUserDialog from '@/components/missions/AssignUserDialog';
+import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
@@ -77,8 +78,8 @@ export default function MissionDetailPage() {
     try {
       await updateMission.mutateAsync({ status: newStatus });
       toast.success(`Status changed to ${newStatus}`);
-    } catch {
-      toast.error('Failed to update status');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to update status'));
     }
   };
 
@@ -86,8 +87,8 @@ export default function MissionDetailPage() {
     try {
       await removeParticipant.mutateAsync(userId);
       toast.success('Participant removed');
-    } catch {
-      toast.error('Failed to remove participant');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to remove participant'));
     }
   };
 
@@ -106,8 +107,8 @@ export default function MissionDetailPage() {
       setNewTaskDescription('');
       setNewTaskType('quiz');
       setTaskDialogOpen(false);
-    } catch {
-      toast.error('Failed to create task');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to create task'));
     }
   };
 
@@ -115,8 +116,8 @@ export default function MissionDetailPage() {
     try {
       await deleteTask.mutateAsync(taskDocId);
       toast.success('Task removed');
-    } catch {
-      toast.error('Failed to remove task');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to remove task'));
     }
   };
 

@@ -131,24 +131,29 @@ export default {
     }
 
     let addedCount = 0;
+    const errors: string[] = [];
 
     for (const member of members) {
-      const existing = await strapi.query('api::mission-user.mission-user').findOne({
-        where: {
-          mission: mission.id,
-          user: member.id,
-        },
-      });
-
-      if (!existing) {
-        await strapi.query('api::mission-user.mission-user').create({
-          data: {
+      try {
+        const existing = await strapi.query('api::mission-user.mission-user').findOne({
+          where: {
             mission: mission.id,
             user: member.id,
-            status: 'assigned',
           },
         });
-        addedCount++;
+
+        if (!existing) {
+          await strapi.query('api::mission-user.mission-user').create({
+            data: {
+              mission: mission.id,
+              user: member.id,
+              status: 'assigned',
+            },
+          });
+          addedCount++;
+        }
+      } catch (error) {
+        errors.push(`Failed to assign user ${member.id}: ${error.message}`);
       }
     }
 
@@ -157,6 +162,7 @@ export default {
         message: `${addedCount} user(s) assigned from organization "${org.name}"`,
         addedCount,
         totalMembers: members.length,
+        errors: errors.length > 0 ? errors : undefined,
       },
     };
   },

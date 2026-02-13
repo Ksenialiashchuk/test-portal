@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { useCreateOrganization } from '@/lib/queries/useOrganizations';
 import { useUsers } from '@/lib/queries/useUsers';
+import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
 const schema = yup.object({
@@ -57,8 +58,7 @@ export default function CreateOrgDialog() {
       setManagerId('');
       setOpen(false);
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-      toast.error(axiosErr.response?.data?.error?.message || 'Failed to create organization');
+      toast.error(getErrorMessage(err, 'Failed to create organization'));
     }
   };
 
