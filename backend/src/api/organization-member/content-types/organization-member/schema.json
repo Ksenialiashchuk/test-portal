@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "organization_members",
+  "info": {
+    "singularName": "organization-member",
+    "pluralName": "organization-members",
+    "displayName": "OrganizationMember",
+    "description": "Link between organization and user with role"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "inversedBy": "organizationMembers"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "role": {
+      "type": "enumeration",
+      "enum": ["manager", "employee"],
+      "required": true
+    }
+  }
+}

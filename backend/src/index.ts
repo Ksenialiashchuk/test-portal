@@ -60,6 +60,13 @@ export default {
       'api::organization.custom-organization.addMember',
       'api::organization.custom-organization.removeMember',
     ];
+    const orgMemberCrud = [
+      'api::organization-member.organization-member.find',
+      'api::organization-member.organization-member.findOne',
+      'api::organization-member.organization-member.create',
+      'api::organization-member.organization-member.update',
+      'api::organization-member.organization-member.delete',
+    ];
     const missionCrud = [
       'api::mission.mission.find',
       'api::mission.mission.findOne',
@@ -101,7 +108,7 @@ export default {
     ];
 
     const adminActions = [
-      ...orgCrud, ...orgCustom,
+      ...orgCrud, ...orgCustom, ...orgMemberCrud,
       ...missionCrud, ...missionCustom,
       ...missionUserCrud,
       ...taskCrud,
@@ -113,7 +120,7 @@ export default {
       'api::organization.organization.find',
       'api::organization.organization.findOne',
       'api::organization.organization.update',
-      ...orgCustom,
+      ...orgCustom, ...orgMemberCrud,
       ...missionCrud, ...missionCustom,
       ...missionUserCrud,
       ...taskCrud,
@@ -123,6 +130,8 @@ export default {
     const authenticatedActions = [
       'api::organization.organization.find',
       'api::organization.organization.findOne',
+      'api::organization-member.organization-member.find',
+      'api::organization-member.organization-member.findOne',
       'api::mission.mission.find',
       'api::mission.mission.findOne',
       'api::mission-user.mission-user.find',
@@ -165,6 +174,81 @@ export default {
         'plugin::users-permissions.auth.callback',
         'plugin::users-permissions.auth.register',
       ]);
+    }
+
+    const migrationFlag = await strapi.db.query('plugin::upload.file').findOne({
+      where: { name: '__org_member_migration_done__' },
+    });
+
+    if (!migrationFlag) {
+      console.log('Starting organization member migration...');
+      
+      const knex = strapi.db.connection;
+      const hasOldColumns = await knex.schema.hasColumn('organizations', 'manager');
+      
+      if (hasOldColumns) {
+        const orgsWithOldData = await knex('organizations')
+          .select('*')
+          .whereNotNull('manager')
+          .orWhereExists(function(this: any) {
+            this.select('*')
+              .from('organizations_members_links')
+              .whereRaw('organizations_members_links.organization_id = organizations.id');
+          });
+
+        for (const org of orgsWithOldData) {
+          if (org.manager) {
+            const existing = await strapi.query('api::organization-member.organization-member').findOne({
+              where: { organization: org.id, user: org.manager },
+            });
+            
+            if (!existing) {
+              await strapi.query('api::organization-member.organization-member').create({
+                data: {
+                  organization: org.id,
+                  user: org.manager,
+                  role: 'manager',
+                },
+              });
+              console.log(`Migrated manager for org ${org.id}`);
+            }
+          }
+
+          const memberLinks = await knex('organizations_members_links')
+            .where({ organization_id: org.id });
+
+          for (const link of memberLinks) {
+            if (link.user_id === org.manager) continue;
+
+            const existing = await strapi.query('api::organization-member.organization-member').findOne({
+              where: { organization: org.id, user: link.user_id },
+            });
+
+            if (!existing) {
+              await strapi.query('api::organization-member.organization-member').create({
+                data: {
+                  organization: org.id,
+                  user: link.user_id,
+                  role: 'employee',
+                },
+              });
+              console.log(`Migrated member ${link.user_id} for org ${org.id}`);
+            }
+          }
+        }
+
+        console.log('Organization member migration completed');
+      }
+
+      await strapi.db.query('plugin::upload.file').create({
+        data: {
+          name: '__org_member_migration_done__',
+          hash: 'migration_flag',
+          ext: '.txt',
+          mime: 'text/plain',
+          size: 0,
+        },
+      });
     }
 
     console.log('Bootstrap completed - roles and permissions initialized');

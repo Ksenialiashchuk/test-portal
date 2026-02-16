@@ -39,19 +39,26 @@ export default factories.createCoreController(
       const isManager = userWithRole?.role?.name === 'Manager';
 
       if (isManager) {
-        const managedOrgs = await strapi
-          .query('api::organization.organization')
+        const managedOrgMembers = await strapi
+          .query('api::organization-member.organization-member')
           .findMany({
-            where: { manager: user.id },
-            populate: ['members'],
+            where: { user: user.id, role: 'manager' },
+            populate: ['organization'],
+          });
+
+        const managedOrgIds = managedOrgMembers.map((om) => (om as any).organization?.id).filter(Boolean);
+
+        const allOrgMembers = await strapi
+          .query('api::organization-member.organization-member')
+          .findMany({
+            where: { organization: { $in: managedOrgIds } },
+            populate: ['user'],
           });
 
         const orgMemberIds = new Set<number>();
-        orgMemberIds.add(user.id);
-        for (const org of managedOrgs) {
-          const members = (org as { members?: Array<{ id: number }> }).members || [];
-          for (const member of members) {
-            orgMemberIds.add(member.id);
+        for (const om of allOrgMembers) {
+          if ((om as any).user?.id) {
+            orgMemberIds.add((om as any).user.id);
           }
         }
 
@@ -153,19 +160,26 @@ export default factories.createCoreController(
         const isManager = userWithRole?.role?.name === 'Manager';
 
         if (isManager) {
-          const managedOrgs = await strapi
-            .query('api::organization.organization')
+          const managedOrgMembers = await strapi
+            .query('api::organization-member.organization-member')
             .findMany({
-              where: { manager: user.id },
-              populate: ['members'],
+              where: { user: user.id, role: 'manager' },
+              populate: ['organization'],
+            });
+
+          const managedOrgIds = managedOrgMembers.map((om) => (om as any).organization?.id).filter(Boolean);
+
+          const allOrgMembers = await strapi
+            .query('api::organization-member.organization-member')
+            .findMany({
+              where: { organization: { $in: managedOrgIds } },
+              populate: ['user'],
             });
 
           const orgMemberIds = new Set<number>();
-          orgMemberIds.add(user.id);
-          for (const org of managedOrgs) {
-            const members = (org as { members?: Array<{ id: number }> }).members || [];
-            for (const member of members) {
-              orgMemberIds.add(member.id);
+          for (const om of allOrgMembers) {
+            if ((om as any).user?.id) {
+              orgMemberIds.add((om as any).user.id);
             }
           }
 

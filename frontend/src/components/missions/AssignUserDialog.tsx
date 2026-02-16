@@ -137,7 +137,7 @@ export default function AssignUserDialog({ missionDocumentId, existingParticipan
                 <SelectContent>
                   {(organizations || []).map((org: Organization) => (
                     <SelectItem key={org.documentId} value={org.documentId}>
-                      {org.name} ({org.members?.length || 0} members)
+                      {org.name} ({org.organizationMembers?.length || 0} members)
                     </SelectItem>
                   ))}
                 </SelectContent>

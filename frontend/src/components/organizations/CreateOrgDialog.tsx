@@ -14,15 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useCreateOrganization } from '@/lib/queries/useOrganizations';
-import { useUsers } from '@/lib/queries/useUsers';
 import { getErrorMessage } from '@/lib/errors';
 import { toast } from 'sonner';
 
@@ -35,9 +27,7 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function CreateOrgDialog() {
   const [open, setOpen] = useState(false);
-  const [managerId, setManagerId] = useState<string>('');
   const createOrg = useCreateOrganization();
-  const { data: users } = useUsers();
   const {
     register,
     handleSubmit,
@@ -49,13 +39,9 @@ export default function CreateOrgDialog() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await createOrg.mutateAsync({
-        ...data,
-        ...(managerId ? { manager: Number(managerId) } : {}),
-      });
-      toast.success('Organization created');
+      await createOrg.mutateAsync(data);
+      toast.success('Organization created. Add members to get started.');
       reset();
-      setManagerId('');
       setOpen(false);
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Failed to create organization'));
@@ -80,23 +66,6 @@ export default function CreateOrgDialog() {
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Input id="description" {...register('description')} placeholder="Description (optional)" />
-          </div>
-          <div className="space-y-2">
-            <Label>Manager (optional)</Label>
-            <Select value={managerId} onValueChange={setManagerId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a manager" />
-              </SelectTrigger>
-              <SelectContent>
-                {users
-                  ?.filter((user) => user.role?.name === 'Manager')
-                  .map((user) => (
-                    <SelectItem key={user.id} value={String(user.id)}>
-                      {user.username} ({user.email})
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
           </div>
           <Button type="submit" className="w-full" disabled={createOrg.isPending}>
             {createOrg.isPending ? 'Creating...' : 'Create'}

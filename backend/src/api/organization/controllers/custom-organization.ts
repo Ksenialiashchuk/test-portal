@@ -4,27 +4,35 @@ export default {
 
     const org = await strapi.query('api::organization.organization').findOne({
       where: { documentId: id },
-      populate: ['members', 'manager'],
     });
 
     if (!org) {
       return ctx.notFound('Organization not found');
     }
 
+    const orgMembers = await strapi.query('api::organization-member.organization-member').findMany({
+      where: { organization: org.id },
+      populate: ['user'],
+    });
+
     ctx.body = {
-      data: {
-        members: org.members || [],
-        manager: org.manager || null,
-      },
+      data: orgMembers.map((om) => ({
+        user: om.user,
+        role: om.role,
+      })),
     };
   },
 
   async addMember(ctx) {
     const { id } = ctx.params;
-    const { userId } = ctx.request.body;
+    const { userId, role } = ctx.request.body;
 
     if (!userId) {
       return ctx.badRequest('userId is required');
+    }
+
+    if (!role || !['manager', 'employee'].includes(role)) {
+      return ctx.badRequest('role must be "manager" or "employee"');
     }
 
     const user = await strapi.query('plugin::users-permissions.user').findOne({
@@ -37,28 +45,34 @@ export default {
 
     const org = await strapi.query('api::organization.organization').findOne({
       where: { documentId: id },
-      populate: ['members'],
     });
 
     if (!org) {
       return ctx.notFound('Organization not found');
     }
 
-    const existingMemberIds = (org.members || []).map((m) => m.id);
-    if (existingMemberIds.includes(userId)) {
+    const existing = await strapi.query('api::organization-member.organization-member').findOne({
+      where: {
+        organization: org.id,
+        user: userId,
+      },
+    });
+
+    if (existing) {
       return ctx.badRequest('User is already a member of this organization');
     }
 
-    const updatedOrg = await strapi.query('api::organization.organization').update({
-      where: { documentId: id },
+    const orgMember = await strapi.query('api::organization-member.organization-member').create({
       data: {
-        members: [...existingMemberIds, userId],
+        organization: org.id,
+        user: userId,
+        role,
       },
-      populate: ['members', 'manager'],
+      populate: ['user', 'organization'],
     });
 
     ctx.body = {
-      data: updatedOrg,
+      data: orgMember,
     };
   },
 
@@ -67,26 +81,29 @@ export default {
 
     const org = await strapi.query('api::organization.organization').findOne({
       where: { documentId: id },
-      populate: ['members'],
     });
 
     if (!org) {
       return ctx.notFound('Organization not found');
     }
 
-    const existingMemberIds = (org.members || []).map((m) => m.id);
-    const filteredIds = existingMemberIds.filter((mId) => mId !== parseInt(userId, 10));
-
-    const updatedOrg = await strapi.query('api::organization.organization').update({
-      where: { documentId: id },
-      data: {
-        members: filteredIds,
+    const orgMember = await strapi.query('api::organization-member.organization-member').findOne({
+      where: {
+        organization: org.id,
+        user: parseInt(userId, 10),
       },
-      populate: ['members', 'manager'],
+    });
+
+    if (!orgMember) {
+      return ctx.notFound('User is not a member of this organization');
+    }
+
+    await strapi.query('api::organization-member.organization-member').delete({
+      where: { id: orgMember.id },
     });
 
     ctx.body = {
-      data: updatedOrg,
+      data: { message: 'Member removed successfully' },
     };
   },
 };

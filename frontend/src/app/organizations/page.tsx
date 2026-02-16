@@ -25,8 +25,7 @@ export default function OrganizationsPage() {
   if (!isAdmin(effectiveUser)) {
     organizations = allOrganizations?.filter(
       (org) =>
-        org.manager?.id === effectiveUser?.id ||
-        org.members?.some((m) => m.id === effectiveUser?.id)
+        org.organizationMembers?.some((om) => om.user.id === effectiveUser?.id)
     );
   }
 
@@ -47,8 +46,8 @@ export default function OrganizationsPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Manager</TableHead>
-                <TableHead>Members</TableHead>
+                <TableHead>Managers</TableHead>
+                <TableHead>Total Members</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -60,30 +59,34 @@ export default function OrganizationsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {organizations.map((org) => (
-                <TableRow key={org.id}>
-                  <TableCell className="font-medium">{org.name}</TableCell>
-                  <TableCell>{org.description || '—'}</TableCell>
-                  <TableCell>
-                    {org.manager ? (
-                      <Badge variant="secondary">{org.manager.username}</Badge>
-                    ) : (
-                      <span className="text-gray-400">None</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge>{org.members?.length || 0} members</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/organizations/${org.documentId}`}
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      View Details
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {organizations.map((org) => {
+                const managers = org.organizationMembers?.filter((om) => om.role === 'manager') || [];
+                const totalMembers = org.organizationMembers?.length || 0;
+                return (
+                  <TableRow key={org.id}>
+                    <TableCell className="font-medium">{org.name}</TableCell>
+                    <TableCell>{org.description || '—'}</TableCell>
+                    <TableCell>
+                      {managers.length > 0 ? (
+                        <Badge variant="secondary">{managers.length} manager{managers.length !== 1 ? 's' : ''}</Badge>
+                      ) : (
+                        <span className="text-gray-400">None</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge>{totalMembers} member{totalMembers !== 1 ? 's' : ''}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/organizations/${org.documentId}`}
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        View Details
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

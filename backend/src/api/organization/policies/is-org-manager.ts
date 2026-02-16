@@ -16,8 +16,17 @@ export default async (policyContext, config, { strapi }) => {
 
   const org = await strapi.query('api::organization.organization').findOne({
     where: { documentId: orgId },
-    populate: ['manager'],
   });
 
-  return org?.manager?.id === user.id;
+  if (!org) return false;
+
+  const orgMember = await strapi.query('api::organization-member.organization-member').findOne({
+    where: {
+      organization: org.id,
+      user: user.id,
+      role: 'manager',
+    },
+  });
+
+  return !!orgMember;
 };

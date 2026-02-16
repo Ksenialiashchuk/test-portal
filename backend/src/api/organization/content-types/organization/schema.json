@@ -20,15 +20,11 @@
     "description": {
       "type": "text"
     },
-    "manager": {
+    "organizationMembers": {
       "type": "relation",
-      "relation": "manyToOne",
-      "target": "plugin::users-permissions.user"
-    },
-    "members": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "plugin::users-permissions.user"
+      "relation": "oneToMany",
+      "target": "api::organization-member.organization-member",
+      "mappedBy": "organization"
     }
   }
 }

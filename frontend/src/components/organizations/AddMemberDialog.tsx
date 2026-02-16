@@ -30,6 +30,7 @@ interface AddMemberDialogProps {
 export default function AddMemberDialog({ orgDocumentId, existingMemberIds }: AddMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<'manager' | 'employee'>('employee');
   const { data: users } = useUsers();
   const addMember = useAddOrgMember(orgDocumentId);
 
@@ -40,9 +41,10 @@ export default function AddMemberDialog({ orgDocumentId, existingMemberIds }: Ad
   const handleAdd = async () => {
     if (!selectedUserId) return;
     try {
-      await addMember.mutateAsync(parseInt(selectedUserId, 10));
+      await addMember.mutateAsync({ userId: parseInt(selectedUserId, 10), role: selectedRole });
       toast.success('Member added successfully');
       setSelectedUserId('');
+      setSelectedRole('employee');
       setOpen(false);
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Failed to add member'));
@@ -59,18 +61,33 @@ export default function AddMemberDialog({ orgDocumentId, existingMemberIds }: Ad
           <DialogTitle>Add Member to Organization</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a user..." />
-            </SelectTrigger>
-            <SelectContent>
-              {availableUsers.map((u: StrapiUser) => (
-                <SelectItem key={u.id} value={String(u.id)}>
-                  {u.username} ({u.email})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">User</label>
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a user..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUsers.map((u: StrapiUser) => (
+                  <SelectItem key={u.id} value={String(u.id)}>
+                    {u.username} ({u.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Role</label>
+            <Select value={selectedRole} onValueChange={(val) => setSelectedRole(val as 'manager' | 'employee')}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="employee">Employee</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button onClick={handleAdd} disabled={!selectedUserId || addMember.isPending} className="w-full">
             {addMember.isPending ? 'Adding...' : 'Add Member'}
           </Button>

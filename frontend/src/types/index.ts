@@ -17,13 +17,24 @@ export interface StrapiRole {
   type: string;
 }
 
+export type OrganizationRole = 'manager' | 'employee';
+
+export interface OrganizationMember {
+  id: number;
+  documentId?: string;
+  user: StrapiUser;
+  organization?: Organization;
+  role: OrganizationRole;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Organization {
   id: number;
   documentId: string;
   name: string;
   description: string | null;
-  manager: StrapiUser | null;
-  members: StrapiUser[];
+  organizationMembers?: OrganizationMember[];
   createdAt: string;
   updatedAt: string;
 }

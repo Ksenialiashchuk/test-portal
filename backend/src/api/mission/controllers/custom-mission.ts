@@ -118,27 +118,30 @@ export default {
 
     const org = await strapi.query('api::organization.organization').findOne({
       where: { documentId: organizationId },
-      populate: ['members'],
     });
 
     if (!org) {
       return ctx.notFound('Organization not found');
     }
 
-    const members = org.members || [];
-    if (members.length === 0) {
+    const orgMembers = await strapi.query('api::organization-member.organization-member').findMany({
+      where: { organization: org.id },
+      populate: ['user'],
+    });
+
+    if (orgMembers.length === 0) {
       return ctx.badRequest('Organization has no members');
     }
 
     let addedCount = 0;
     const errors: string[] = [];
 
-    for (const member of members) {
+    for (const orgMember of orgMembers) {
       try {
         const existing = await strapi.query('api::mission-user.mission-user').findOne({
           where: {
             mission: mission.id,
-            user: member.id,
+            user: orgMember.user.id,
           },
         });
 
@@ -146,14 +149,14 @@ export default {
           await strapi.query('api::mission-user.mission-user').create({
             data: {
               mission: mission.id,
-              user: member.id,
+              user: orgMember.user.id,
               status: 'assigned',
             },
           });
           addedCount++;
         }
       } catch (error) {
-        errors.push(`Failed to assign user ${member.id}: ${error.message}`);
+        errors.push(`Failed to assign user ${orgMember.user.id}: ${error.message}`);
       }
     }
 
@@ -161,7 +164,7 @@ export default {
       data: {
         message: `${addedCount} user(s) assigned from organization "${org.name}"`,
         addedCount,
-        totalMembers: members.length,
+        totalMembers: orgMembers.length,
         errors: errors.length > 0 ? errors : undefined,
       },
     };

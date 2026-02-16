@@ -21,7 +21,7 @@ export default factories.createCoreController(
       if (isAdmin) {
         const allOrgs = await strapi
           .query('api::organization.organization')
-          .findMany({ populate: ['manager', 'members'] });
+          .findMany({ populate: { organizationMembers: { populate: ['user'] } } });
         ctx.body = {
           data: allOrgs,
           meta: {
@@ -37,28 +37,14 @@ export default factories.createCoreController(
       }
 
       const userId = user.id;
-      const managerOrgs = await strapi
-        .query('api::organization.organization')
+      const orgMembers = await strapi
+        .query('api::organization-member.organization-member')
         .findMany({
-          where: { manager: userId },
-          populate: ['manager', 'members'],
-        });
-      
-      const memberOrgs = await strapi
-        .query('api::organization.organization')
-        .findMany({
-          where: { members: userId },
-          populate: ['manager', 'members'],
+          where: { user: userId },
+          populate: { organization: { populate: { organizationMembers: { populate: ['user'] } } } },
         });
 
-      const seen = new Set(managerOrgs.map((o) => o.documentId));
-      const merged = [...managerOrgs];
-      for (const o of memberOrgs) {
-        if (!seen.has(o.documentId)) {
-          seen.add(o.documentId);
-          merged.push(o);
-        }
-      }
+      const merged = orgMembers.map((om) => om.organization).filter(Boolean);
 
       ctx.body = {
         data: merged,
@@ -92,7 +78,7 @@ export default factories.createCoreController(
         .query('api::organization.organization')
         .findOne({
           where: { documentId },
-          populate: ['manager', 'members'],
+          populate: { organizationMembers: { populate: ['user'] } },
         });
 
       if (!org) {
@@ -100,9 +86,15 @@ export default factories.createCoreController(
       }
 
       if (!isAdmin) {
-        const isManager = org.manager?.id === user.id;
-        const isMember = (org.members || []).some((m) => m.id === user.id);
-        if (!isManager && !isMember) {
+        const orgMember = await strapi
+          .query('api::organization-member.organization-member')
+          .findOne({
+            where: {
+              organization: org.id,
+              user: user.id,
+            },
+          });
+        if (!orgMember) {
           return ctx.forbidden();
         }
       }

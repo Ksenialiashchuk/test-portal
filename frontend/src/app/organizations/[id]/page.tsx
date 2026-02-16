@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
-import { useOrganization, useRemoveOrgMember, useSetOrgManager } from '@/lib/queries/useOrganizations';
-import { useCurrentUser, useUsers } from '@/lib/queries/useUsers';
-import { isAdmin, isManager, getStoredUser } from '@/lib/auth';
+import { useOrganization, useRemoveOrgMember } from '@/lib/queries/useOrganizations';
+import { useCurrentUser } from '@/lib/queries/useUsers';
+import { isAdmin, getStoredUser } from '@/lib/auth';
 import {
   Table,
   TableBody,
@@ -15,13 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,14 +29,16 @@ export default function OrganizationDetailPage() {
   const { data: currentUser } = useCurrentUser();
   const effectiveUser = currentUser || getStoredUser();
   const removeMember = useRemoveOrgMember(documentId);
-  const setManager = useSetOrgManager(documentId);
-  const { data: allUsers } = useUsers();
 
-  const [editingManager, setEditingManager] = useState(false);
-  const [selectedManagerId, setSelectedManagerId] = useState<string>('');
-
-  const canManage = isAdmin(effectiveUser) || isManager(effectiveUser);
+  const isOrgManager = org?.organizationMembers?.some(
+    (om) => om.user.id === effectiveUser?.id && om.role === 'manager'
+  );
+  const canManage = isAdmin(effectiveUser) || isOrgManager;
   const adminOnly = isAdmin(effectiveUser);
+
+  const managers = org?.organizationMembers?.filter((om) => om.role === 'manager') || [];
+  const allMembers = org?.organizationMembers || [];
+  const existingMemberIds = allMembers.map((om) => om.user.id);
 
   const handleRemoveMember = async (userId: number) => {
     try {
@@ -51,18 +46,6 @@ export default function OrganizationDetailPage() {
       toast.success('Member removed');
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to remove member'));
-    }
-  };
-
-  const handleSetManager = async () => {
-    if (!selectedManagerId) return;
-    try {
-      await setManager.mutateAsync(Number(selectedManagerId));
-      toast.success('Manager updated');
-      setEditingManager(false);
-      setSelectedManagerId('');
-    } catch (err) {
-      toast.error(getErrorMessage(err, 'Failed to update manager'));
     }
   };
 
@@ -87,68 +70,20 @@ export default function OrganizationDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Manager</CardTitle>
+                <CardTitle>Managers</CardTitle>
               </CardHeader>
               <CardContent>
-                {org.manager ? (
-                  <div>
-                    <p className="font-medium">{org.manager.username}</p>
-                    <p className="text-sm text-gray-500">{org.manager.email}</p>
+                {managers.length > 0 ? (
+                  <div className="space-y-2">
+                    {managers.map((om) => (
+                      <div key={om.user.id}>
+                        <p className="font-medium">{om.user.username}</p>
+                        <p className="text-sm text-gray-500">{om.user.email}</p>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400">No manager assigned</p>
-                )}
-
-                {adminOnly && !editingManager && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => {
-                      setSelectedManagerId(org.manager ? String(org.manager.id) : '');
-                      setEditingManager(true);
-                    }}
-                  >
-                    {org.manager ? 'Change Manager' : 'Assign Manager'}
-                  </Button>
-                )}
-
-                {adminOnly && editingManager && (
-                  <div className="mt-3 space-y-2">
-                    <Select value={selectedManagerId} onValueChange={setSelectedManagerId}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a user..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(allUsers || [])
-                        .filter((u) => u.role?.name === 'Manager')
-                        .map((u) => (
-                          <SelectItem key={u.id} value={String(u.id)}>
-                            {u.username} ({u.email})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={handleSetManager}
-                        disabled={!selectedManagerId || setManager.isPending}
-                      >
-                        {setManager.isPending ? 'Saving...' : 'Save'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingManager(false);
-                          setSelectedManagerId('');
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
+                  <p className="text-gray-400">No managers assigned</p>
                 )}
               </CardContent>
             </Card>
@@ -158,8 +93,12 @@ export default function OrganizationDetailPage() {
                 <CardTitle>Statistics</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{org.members?.length || 0}</p>
-                <p className="text-sm text-gray-500">Members</p>
+                <p className="text-3xl font-bold">{allMembers.length}</p>
+                <p className="text-sm text-gray-500">Total Members</p>
+                <div className="mt-3 text-sm text-gray-600">
+                  <p>{managers.length} Manager{managers.length !== 1 ? 's' : ''}</p>
+                  <p>{allMembers.length - managers.length} Employee{allMembers.length - managers.length !== 1 ? 's' : ''}</p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -169,7 +108,7 @@ export default function OrganizationDetailPage() {
             {canManage && (
               <AddMemberDialog
                 orgDocumentId={documentId}
-                existingMemberIds={(org.members || []).map((m) => m.id)}
+                existingMemberIds={existingMemberIds}
               />
             )}
           </div>
@@ -185,26 +124,28 @@ export default function OrganizationDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(!org.members || org.members.length === 0) && (
+                {allMembers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={canManage ? 4 : 3} className="text-center text-gray-500">
                       No members yet
                     </TableCell>
                   </TableRow>
                 )}
-                {(org.members || []).map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium">{member.username}</TableCell>
-                    <TableCell>{member.email}</TableCell>
+                {allMembers.map((om) => (
+                  <TableRow key={om.user.id}>
+                    <TableCell className="font-medium">{om.user.username}</TableCell>
+                    <TableCell>{om.user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">Member</Badge>
+                      <Badge variant={om.role === 'manager' ? 'default' : 'secondary'}>
+                        {om.role === 'manager' ? 'Manager' : 'Employee'}
+                      </Badge>
                     </TableCell>
                     {canManage && (
                       <TableCell>
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleRemoveMember(member.id)}
+                          onClick={() => handleRemoveMember(om.user.id)}
                           disabled={removeMember.isPending}
                         >
                           Remove

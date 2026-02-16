@@ -502,6 +502,45 @@ export interface ApiMissionMission extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiOrganizationMemberOrganizationMember
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'organization_members';
+  info: {
+    description: 'Link between organization and user with role';
+    displayName: 'OrganizationMember';
+    pluralName: 'organization-members';
+    singularName: 'organization-member';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::organization-member.organization-member'
+    > &
+      Schema.Attribute.Private;
+    organization: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::organization.organization'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    role: Schema.Attribute.Enumeration<['manager', 'employee']> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiOrganizationOrganization
   extends Struct.CollectionTypeSchema {
   collectionName: 'organizations';
@@ -525,17 +564,13 @@ export interface ApiOrganizationOrganization
       'api::organization.organization'
     > &
       Schema.Attribute.Private;
-    manager: Schema.Attribute.Relation<
-      'manyToOne',
-      'plugin::users-permissions.user'
-    >;
-    members: Schema.Attribute.Relation<
-      'manyToMany',
-      'plugin::users-permissions.user'
-    >;
     name: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
+    organizationMembers: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::organization-member.organization-member'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1090,6 +1125,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::mission-user.mission-user': ApiMissionUserMissionUser;
       'api::mission.mission': ApiMissionMission;
+      'api::organization-member.organization-member': ApiOrganizationMemberOrganizationMember;
       'api::organization.organization': ApiOrganizationOrganization;
       'api::task.task': ApiTaskTask;
       'plugin::content-releases.release': PluginContentReleasesRelease;
