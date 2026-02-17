@@ -1,0 +1,42 @@
+.dashboard-page {
+  .stat-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+
+    &.stat-card-green .ant-statistic-content-value {
+      color: #3f8600;
+    }
+
+    &.stat-card-blue .ant-statistic-content-value {
+      color: #1890ff;
+    }
+
+    &.stat-card-red .ant-statistic-content-value {
+      color: #cf1322;
+    }
+  }
+
+  .ant-statistic-title {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .ant-statistic-content {
+    font-size: 32px;
+    font-weight: 600;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-page {
+    .ant-statistic-content {
+      font-size: 24px;
+    }
+  }
+}

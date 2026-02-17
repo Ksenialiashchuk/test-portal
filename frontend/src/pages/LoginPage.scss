@@ -1,0 +1,43 @@
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    margin: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #1890ff;
+      }
+
+      p {
+        color: #8c8c8c;
+        margin: 0;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    .login-card {
+      margin: 16px;
+
+      .login-header h1 {
+        font-size: 24px;
+      }
+    }
+  }
+}

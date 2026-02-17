@@ -1,3 +1,10 @@
+export interface StrapiRole {
+  id: number;
+  name: string;
+  description: string;
+  type: string;
+}
+
 export interface StrapiUser {
   id: number;
   username: string;
@@ -5,16 +12,9 @@ export interface StrapiUser {
   provider: string;
   confirmed: boolean;
   blocked: boolean;
-  role?: StrapiRole;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface StrapiRole {
-  id: number;
-  name: string;
-  description: string;
-  type: string;
+  role?: StrapiRole;
 }
 
 export type OrganizationRole = 'manager' | 'employee';
@@ -39,12 +39,24 @@ export interface Organization {
   updatedAt: string;
 }
 
+export interface MissionUser {
+  id: number;
+  documentId: string;
+  user: StrapiUser;
+  mission: Mission;
+  status: 'assigned' | 'in_progress' | 'completed';
+  assignedAt: string;
+  completedAt?: string;
+}
+
 export interface Mission {
   id: number;
   documentId: string;
   title: string;
   description: string | null;
-  status: 'draft' | 'active' | 'completed';
+  organization?: Organization;
+  missionUsers?: MissionUser[];
+  tasks?: Task[];
   createdAt: string;
   updatedAt: string;
 }
@@ -54,19 +66,8 @@ export interface Task {
   documentId: string;
   title: string;
   description: string | null;
-  type: 'quiz' | 'survey' | 'action' | 'other';
-  order: number;
-  mission?: Mission;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface MissionUser {
-  id: number;
-  documentId: string;
   mission: Mission;
-  user: StrapiUser;
-  status: 'assigned' | 'in_progress' | 'completed';
+  order: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,21 +75,4 @@ export interface MissionUser {
 export interface AuthResponse {
   jwt: string;
   user: StrapiUser;
-}
-
-export interface StrapiListResponse<T> {
-  data: T[];
-  meta: {
-    pagination: {
-      page: number;
-      pageSize: number;
-      pageCount: number;
-      total: number;
-    };
-  };
-}
-
-export interface StrapiSingleResponse<T> {
-  data: T;
-  meta: Record<string, unknown>;
 }

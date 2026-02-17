@@ -1,5 +1,5 @@
 import api from './api';
-import type { AuthResponse, StrapiUser } from '@/types';
+import type { AuthResponse, StrapiUser } from '../types';
 
 export async function login(identifier: string, password: string): Promise<AuthResponse> {
   const response = await api.post('/api/auth/local', {
@@ -28,7 +28,6 @@ export function logout() {
 }
 
 export function getStoredUser(): StrapiUser | null {
-  if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem('user');
   if (!userStr) return null;
   try {
@@ -39,7 +38,6 @@ export function getStoredUser(): StrapiUser | null {
 }
 
 export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
   return localStorage.getItem('jwt');
 }
 

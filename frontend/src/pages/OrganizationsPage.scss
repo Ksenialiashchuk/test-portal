@@ -1,0 +1,132 @@
+.organizations-page {
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .desktop-view {
+    display: block;
+
+    .org-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      a {
+        color: #1890ff;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .manager-row {
+      background-color: #e6f7ff;
+      border-left: 4px solid #1890ff;
+    }
+  }
+
+  .mobile-view {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .organizations-page {
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      h2 {
+        font-size: 20px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .desktop-view {
+      display: none;
+    }
+
+    .mobile-view {
+      display: block;
+
+      .org-card {
+        margin-bottom: 16px;
+        border-radius: 8px;
+
+        &.manager-card {
+          border-left: 4px solid #1890ff;
+          background-color: #f0f8ff;
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 12px;
+
+          h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+
+            a {
+              color: #1890ff;
+            }
+          }
+        }
+
+        .description {
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 12px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+
+        .card-footer {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 340px) {
+  .organizations-page {
+    .page-header h2 {
+      font-size: 18px;
+    }
+
+    .mobile-view .org-card {
+      .card-header h3 {
+        font-size: 14px;
+      }
+
+      .description {
+        font-size: 12px;
+      }
+    }
+  }
+}

@@ -138,7 +138,9 @@ export default {
       'api::mission-user.mission-user.findOne',
       'api::task.task.find',
       'api::task.task.findOne',
-      ...userMeOnly,
+      'plugin::users-permissions.user.me',
+      'plugin::users-permissions.user.find',
+      'plugin::users-permissions.user.findOne',
     ];
 
     async function ensurePermissions(role, actions: string[]) {
